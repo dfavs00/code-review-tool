@@ -43,7 +43,7 @@ class LLMClient(ABC):
 class OpenAIClient(LLMClient):
     """Client for interacting with OpenAI's language models."""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-3.5-turbo") -> None:
+    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4o") -> None:
         """Initialize the OpenAI client.
         
         Args:
@@ -223,7 +223,7 @@ def get_llm_client(provider: ModelProvider, api_key: Optional[str] = None, model
         raise ValueError(f"Unsupported LLM provider: {provider}. Must be one of {valid_providers}")
         
     if provider == "openai":
-        return OpenAIClient(api_key=api_key, model=model or "gpt-3.5-turbo")
+        return OpenAIClient(api_key=api_key, model=model or "gpt-4o")
     elif provider == "anthropic":
         return AnthropicClient(api_key=api_key, model=model or "claude-3-opus-20240229")
     elif provider == "local":
