@@ -1,6 +1,6 @@
 """Integration with Large Language Models for code review."""
 
-from typing import Dict, List, Optional, Any, Literal
+from typing import Dict, List, Optional, Any
 import os
 from abc import ABC, abstractmethod
 
@@ -8,7 +8,9 @@ import openai
 from anthropic import Anthropic
 
 
-ModelProvider = Literal["openai", "anthropic", "local"]
+# ModelProvider type
+# Using str instead of Literal for better compatibility with Typer
+ModelProvider = str  # Possible values: "openai", "anthropic", "local"
 
 
 class LLMClient(ABC):
@@ -207,9 +209,15 @@ def get_llm_client(provider: ModelProvider, api_key: Optional[str] = None, model
     Raises:
         ValueError: If the provider is not supported.
     """
+    # Validate the provider string since we're using a regular string instead of Literal
+    valid_providers = ["openai", "anthropic", "local"]
+    if provider not in valid_providers:
+        raise ValueError(f"Unsupported LLM provider: {provider}. Must be one of {valid_providers}")
+        
     if provider == "openai":
         return OpenAIClient(api_key=api_key, model=model or "gpt-4")
     elif provider == "anthropic":
         return AnthropicClient(api_key=api_key, model=model or "claude-3-opus-20240229")
-    else:
-        raise ValueError(f"Unsupported LLM provider: {provider}")
+    elif provider == "local":
+        # Local model support not yet implemented
+        raise NotImplementedError("Local model support is not yet implemented")

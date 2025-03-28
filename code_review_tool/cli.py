@@ -40,7 +40,7 @@ def review(
         "--repo", "-r",
         help="Path to the Git repository. If not specified, uses the current directory."
     ),
-    model_provider: ModelProvider = typer.Option(
+    model_provider: str = typer.Option(
         "openai",
         "--provider", "-p",
         help="The LLM provider to use for code review (openai, anthropic, or local)."
