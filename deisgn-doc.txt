@@ -1,0 +1,54 @@
+AI Code Review Tool Design Document
+
+1. Overview:
+   - The AI code review tool analyzes code changes between the current local Git branch and another specified branch.
+   - It provides automated feedback using a large language model (LLM) to assess code quality, potential issues, and best practices.
+
+2. Functional Requirements:
+   - Git Integration:
+     - Fetch and analyze diffs between the current branch and a target branch.
+   - Code Analysis:
+     - Extract relevant code changes from the Git diff.
+     - Use an LLM to analyze the changes and provide feedback.
+   - Feedback Generation:
+     - Generate structured feedback in natural language.
+     - Provide actionable suggestions for improvements.
+     - Categorize feedback (e.g., best practices, security concerns, performance optimizations).
+   - User Interface:
+     - Command-line interface (CLI) for initiating reviews.
+     - Option to output results in different formats (console, markdown, JSON).
+     - Future expansion to a GUI if needed.
+
+3. Non-Functional Requirements:
+   - Performance:
+     - Optimize requests to the LLM for cost and speed efficiency.
+   - Scalability:
+     - Support multiple programming languages via LLM prompts.
+   - Security:
+     - Ensure no sensitive code is exposed when using cloud-based LLM APIs.
+   - Compatibility:
+     - Cross-platform support (Windows, macOS, Linux).
+
+4. Architecture:
+   - Components:
+     - **Git Client Interface**: Fetches diffs between branches.
+     - **Diff Parser**: Extracts changed files and relevant code snippets.
+     - **LLM Integration**: Sends structured prompts to an LLM API or local model.
+     - **Feedback Processor**: Formats and structures LLM responses.
+     - **User Interface**: CLI tool for execution and output.
+   - Workflow:
+     - Fetch Git diff → Parse changes → Format structured prompt → Send to LLM → Generate feedback → Display results.
+
+5. Tools and Technologies:
+   - **Language:** Python (due to extensive ecosystem support for Git, APIs, and CLI tools).
+   - **Git Integration:** GitPython or native Git CLI commands.
+   - **LLM API:** OpenAI GPT, Anthropic Claude, or a self-hosted Llama 3 model.
+   - **Prompt Engineering:** Custom templates to ensure effective feedback generation.
+   - **User Interface:** CLI using argparse, rich (for better formatting), or Typer.
+   - **Optional Local Execution:** Ollama or GPT4All for running models locally.
+
+6. Future Enhancements:
+   - CI/CD pipeline integration for automated reviews in pull requests.
+   - Fine-tuning prompts based on user feedback.
+   - Support for additional output formats (e.g., PR comments, GitHub Actions integration).
+   - Potential GUI for enhanced usability.
