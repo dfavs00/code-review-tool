@@ -1,1 +1,23 @@
 .env
+
+# Virtual Environment
+venv/
+env/
+.venv/
+*.pyc
+__pycache__/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
