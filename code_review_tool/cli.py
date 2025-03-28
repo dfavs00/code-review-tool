@@ -100,7 +100,18 @@ def review(
         
         # Generate the review
         console.print("Generating code review...")
-        raw_feedback = llm_client.generate_review(code_context)
+        try:
+            raw_feedback = llm_client.generate_review(code_context)
+        except Exception as e:
+            if "insufficient_quota" in str(e):
+                console.print("[bold red]Error:[/bold red] Your OpenAI account has exceeded its quota. Please check your billing details.")
+                console.print("You can try using a different provider with --provider anthropic (requires an Anthropic API key).")
+            elif "model_not_found" in str(e):
+                console.print("[bold red]Error:[/bold red] The specified model is not available with your API key.")
+                console.print("Try using a different model with --model gpt-3.5-turbo or a different provider with --provider anthropic.")
+            else:
+                console.print(f"[bold red]Error:[/bold red] {str(e)}")
+            sys.exit(1)
         
         # Process the feedback
         console.print("Processing feedback...")

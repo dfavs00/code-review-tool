@@ -3,10 +3,18 @@
 from typing import Dict, List, Optional, Any
 import os
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 import openai
 from anthropic import Anthropic
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+dotenv_path = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) / ".env"
+if dotenv_path.exists():
+    load_dotenv(dotenv_path=dotenv_path)
+else:
+    print("Warning: .env file not found. Please create one based on .env.example to configure API keys.")
 
 # ModelProvider type
 # Using str instead of Literal for better compatibility with Typer
@@ -35,7 +43,7 @@ class LLMClient(ABC):
 class OpenAIClient(LLMClient):
     """Client for interacting with OpenAI's language models."""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4") -> None:
+    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-3.5-turbo") -> None:
         """Initialize the OpenAI client.
         
         Args:
@@ -215,7 +223,7 @@ def get_llm_client(provider: ModelProvider, api_key: Optional[str] = None, model
         raise ValueError(f"Unsupported LLM provider: {provider}. Must be one of {valid_providers}")
         
     if provider == "openai":
-        return OpenAIClient(api_key=api_key, model=model or "gpt-4")
+        return OpenAIClient(api_key=api_key, model=model or "gpt-3.5-turbo")
     elif provider == "anthropic":
         return AnthropicClient(api_key=api_key, model=model or "claude-3-opus-20240229")
     elif provider == "local":
