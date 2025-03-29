@@ -240,18 +240,13 @@ class GeminiClient(LLMClient):
         # Get the model
         model = genai.GenerativeModel(self.model)
         
-        # Generate the review
+        # Create a preamble that includes the system message since Gemini doesn't support system role
+        preamble = "You are a helpful code review assistant. Provide constructive feedback on the code changes.\n\n"
+        full_prompt = preamble + prompt
+        
+        # Generate the review - Gemini doesn't support system role, so we use a different approach
         response = model.generate_content(
-            [
-                {
-                    "role": "system", 
-                    "parts": ["You are a helpful code review assistant. Provide constructive feedback on the code changes."]
-                },
-                {
-                    "role": "user", 
-                    "parts": [prompt]
-                }
-            ],
+            full_prompt,
             generation_config={
                 "temperature": 0.2,  # Lower temperature for more consistent reviews
                 "max_output_tokens": 2000
