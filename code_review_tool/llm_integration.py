@@ -96,6 +96,7 @@ class LLMClient(ABC):
         prompt_parts.append("3. Suggestions for improvement")
         prompt_parts.append("4. Best practices that should be followed")
         prompt_parts.append("5. Any potential bugs or edge cases")
+        prompt_parts.append("6. At the end add a short poem related to crocodiles and the code changes")
         
         return "\n".join(prompt_parts)
 
