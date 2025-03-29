@@ -7,6 +7,7 @@ from pathlib import Path
 
 import openai
 from anthropic import Anthropic
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -18,7 +19,7 @@ else:
 
 # ModelProvider type
 # Using str instead of Literal for better compatibility with Typer
-ModelProvider = str  # Possible values: "openai", "anthropic", "local"
+ModelProvider = str  # Possible values: "openai", "anthropic", "gemini", "local"
 
 
 class LLMClient(ABC):
@@ -203,6 +204,100 @@ class AnthropicClient(LLMClient):
         return "\n".join(prompt_parts)
 
 
+class GeminiClient(LLMClient):
+    """Client for interacting with Google's Gemini models."""
+    
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-pro") -> None:
+        """Initialize the Gemini client.
+        
+        Args:
+            api_key: Google API key. If None, uses the GOOGLE_API_KEY environment variable.
+            model: The model to use for code review.
+        """
+        # Use provided API key or get from environment
+        self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
+        if not self.api_key:
+            raise ValueError("Google API key not provided and not found in environment")
+        
+        # Configure the Gemini API
+        genai.configure(api_key=self.api_key)
+        
+        # Set the model
+        self.model = model
+    
+    def generate_review(self, code_context: Dict[str, Any]) -> str:
+        """Generate a code review using Google's Gemini model.
+        
+        Args:
+            code_context: Dictionary containing code changes and context.
+            
+        Returns:
+            The generated review as a string.
+        """
+        # Create a prompt for the code review
+        prompt = self._create_prompt(code_context)
+        
+        # Get the model
+        model = genai.GenerativeModel(self.model)
+        
+        # Generate the review
+        response = model.generate_content(
+            [
+                {
+                    "role": "system", 
+                    "parts": ["You are a helpful code review assistant. Provide constructive feedback on the code changes."]
+                },
+                {
+                    "role": "user", 
+                    "parts": [prompt]
+                }
+            ],
+            generation_config={
+                "temperature": 0.2,  # Lower temperature for more consistent reviews
+                "max_output_tokens": 2000
+            }
+        )
+        
+        # Extract and return the review text
+        return response.text
+    
+    def _create_prompt(self, code_context: Dict[str, Any]) -> str:
+        """Create a prompt for the code review.
+        
+        Args:
+            code_context: Dictionary containing code changes and context.
+            
+        Returns:
+            The prompt as a string.
+        """
+        # Use the same prompt format as other providers for consistency
+        prompt_parts = ["Please review the following code changes:"]
+        
+        # Add each file's changes to the prompt
+        for file_path, file_info in code_context.items():
+            prompt_parts.append(f"\n## File: {file_path}")
+            
+            if file_info['is_new_file']:
+                prompt_parts.append("(New file)")
+            
+            # Add each change with its context
+            for change in file_info['changes']:
+                prompt_parts.append(f"\nStarting at line {change['start_line']}:")
+                prompt_parts.append("```")
+                prompt_parts.extend(change['lines'])
+                prompt_parts.append("```")
+        
+        # Add instructions for the review
+        prompt_parts.append("\n\nPlease provide a code review that includes:")
+        prompt_parts.append("1. Overall assessment of the changes")
+        prompt_parts.append("2. Specific issues or concerns")
+        prompt_parts.append("3. Suggestions for improvement")
+        prompt_parts.append("4. Best practices that should be followed")
+        prompt_parts.append("5. Any potential bugs or edge cases")
+        
+        return "\n".join(prompt_parts)
+
+
 def get_llm_client(provider: ModelProvider, api_key: Optional[str] = None, model: Optional[str] = None) -> LLMClient:
     """Factory function to get an LLM client based on the provider.
     
@@ -218,7 +313,7 @@ def get_llm_client(provider: ModelProvider, api_key: Optional[str] = None, model
         ValueError: If the provider is not supported.
     """
     # Validate the provider string since we're using a regular string instead of Literal
-    valid_providers = ["openai", "anthropic", "local"]
+    valid_providers = ["openai", "anthropic", "gemini", "local"]
     if provider not in valid_providers:
         raise ValueError(f"Unsupported LLM provider: {provider}. Must be one of {valid_providers}")
         
@@ -226,6 +321,8 @@ def get_llm_client(provider: ModelProvider, api_key: Optional[str] = None, model
         return OpenAIClient(api_key=api_key, model=model or "gpt-4o")
     elif provider == "anthropic":
         return AnthropicClient(api_key=api_key, model=model or "claude-3-opus-20240229")
+    elif provider == "gemini":
+        return GeminiClient(api_key=api_key, model=model or "gemini-1.5-pro")
     elif provider == "local":
         # Local model support not yet implemented
         raise NotImplementedError("Local model support is not yet implemented")

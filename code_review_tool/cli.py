@@ -43,7 +43,7 @@ def review(
     model_provider: str = typer.Option(
         "openai",
         "--provider", "-p",
-        help="The LLM provider to use for code review (openai, anthropic, or local)."
+        help="The LLM provider to use for code review (openai, anthropic, gemini, or local)."
     ),
     model_name: Optional[str] = typer.Option(
         None,
@@ -105,10 +105,13 @@ def review(
         except Exception as e:
             if "insufficient_quota" in str(e):
                 console.print("[bold red]Error:[/bold red] Your OpenAI account has exceeded its quota. Please check your billing details.")
-                console.print("You can try using a different provider with --provider anthropic (requires an Anthropic API key).")
+                console.print("You can try using a different provider with --provider anthropic or --provider gemini (requires respective API keys).")
             elif "model_not_found" in str(e):
                 console.print("[bold red]Error:[/bold red] The specified model is not available with your API key.")
-                console.print("Try using a different model with --model gpt-3.5-turbo or a different provider with --provider anthropic.")
+                console.print("Try using a different model with --model gpt-3.5-turbo or a different provider with --provider anthropic or --provider gemini.")
+            elif "Google API key not provided" in str(e):
+                console.print("[bold red]Error:[/bold red] Google API key not provided or not found in environment.")
+                console.print("Please add your Google API key to the .env file as GOOGLE_API_KEY=your_key_here.")
             else:
                 console.print(f"[bold red]Error:[/bold red] {str(e)}")
             sys.exit(1)

@@ -12,7 +12,7 @@ This tool helps developers improve code quality by providing automated reviews o
 - Intelligent code analysis using LLMs
 - Structured feedback with actionable suggestions
 - Command-line interface for easy integration into workflows
-- Support for multiple LLM providers (OpenAI, Anthropic)
+- Support for multiple LLM providers (OpenAI, Anthropic, Google Gemini)
 - Multiple output formats (text, markdown, JSON)
 
 ## Installation
@@ -47,7 +47,30 @@ Then edit the `.env` file to add your API keys:
 # API Keys for LLM providers
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
+
+# Default settings
+DEFAULT_MODEL_PROVIDER=openai
+DEFAULT_MODEL=gpt-3.5-turbo
 ```
+
+### API Key Setup
+
+#### OpenAI API Key
+1. Visit [OpenAI's platform](https://platform.openai.com/)
+2. Sign up or log in to your account
+3. Navigate to the API section
+4. Create a new API key and copy it to your `.env` file
+
+#### Anthropic API Key
+1. Visit [Anthropic's console](https://console.anthropic.com/)
+2. Sign up or log in to your account
+3. Generate an API key and copy it to your `.env` file
+
+#### Google API Key
+1. Visit the [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Sign up or log in with your Google account
+3. Create a new API key and copy it to your `.env` file
 
 ## Usage
 
@@ -59,6 +82,7 @@ python -m code_review_tool review --target-branch main
 
 # Specify the LLM provider
 python -m code_review_tool review --target-branch main --provider anthropic
+python -m code_review_tool review --target-branch main --provider gemini
 
 # Output in different formats
 python -m code_review_tool review --target-branch main --format markdown
@@ -91,7 +115,7 @@ python example_usage.py [target_branch]
 
 - Python 3.8+
 - Git
-- Access to an LLM API (OpenAI, Anthropic, or local model)
+- Access to an LLM API (OpenAI, Anthropic, Google Gemini, or local model)
 
 ## Future Enhancements
 
