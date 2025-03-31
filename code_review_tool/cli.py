@@ -125,8 +125,8 @@ def review(
         
         # Output the feedback
         if output_file:
-            # Save to file
-            with open(output_file, "w") as f:
+            # Save to file with UTF-8 encoding to support emoji and special characters
+            with open(output_file, "w", encoding="utf-8") as f:
                 f.write(formatted_feedback)
             console.print(f"Review saved to [bold]{output_file}[/bold]")
         else:
