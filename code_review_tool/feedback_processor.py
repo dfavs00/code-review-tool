@@ -261,26 +261,61 @@ class FeedbackProcessor:
         for category, items in items_by_category.items():
             output_parts.append(f"\n## {category.value.title()}")
             
+            # Group items by file path for better organization
+            items_by_file: Dict[str, List[FeedbackItem]] = {}
+            general_items: List[FeedbackItem] = []
+            
             for item in items:
-                severity_emoji = {
-                    'high': '🔴',
-                    'medium': '🟠',
-                    'low': '🟢'
-                }.get(item.severity, '⚪')
-                
-                location = ""
                 if item.file_path:
-                    location += f"`{item.file_path}`"
-                if item.line_number:
-                    location += f" (line {item.line_number})"
-                
-                if location:
-                    output_parts.append(f"### {severity_emoji} {location}")
+                    file_path = item.file_path
+                    if file_path not in items_by_file:
+                        items_by_file[file_path] = []
+                    items_by_file[file_path].append(item)
                 else:
-                    output_parts.append(f"### {severity_emoji} Feedback")
+                    general_items.append(item)
+            
+            # First add file-specific feedback
+            for file_path, file_items in items_by_file.items():
+                output_parts.append(f"### File: `{file_path}`")
                 
-                output_parts.append(item.message)
-                output_parts.append("")
+                for item in file_items:
+                    severity_emoji = {
+                        'high': '🔴',
+                        'medium': '🟠',
+                        'low': '🟢'
+                    }.get(item.severity, '⚪')
+                    
+                    # Add location information if available
+                    if item.line_number:
+                        output_parts.append(f"#### {severity_emoji} Line {item.line_number}")
+                    else:
+                        output_parts.append(f"#### {severity_emoji} Issue")
+                    
+                    output_parts.append(item.message)
+                    output_parts.append("")
+            
+            # Then add general feedback for this category
+            if general_items:
+                if items_by_file:  # Add a separator if we already added file-specific feedback
+                    output_parts.append("### General Feedback")
+                
+                for item in general_items:
+                    severity_emoji = {
+                        'high': '🔴',
+                        'medium': '🟠',
+                        'low': '🟢'
+                    }.get(item.severity, '⚪')
+                    
+                    # For general feedback, don't add redundant headers
+                    # Just use bullet points with emoji indicators
+                    output_parts.append(f"**{severity_emoji} {item.message.splitlines()[0] if item.message.splitlines() else 'Feedback'}**")
+                    
+                    # Add the rest of the message content if it's multiline
+                    if len(item.message.splitlines()) > 1:
+                        output_parts.append("")
+                        output_parts.append("\n".join(item.message.splitlines()[1:]))
+                    
+                    output_parts.append("")
         
         return "\n".join(output_parts)
     
