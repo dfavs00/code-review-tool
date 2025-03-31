@@ -111,32 +111,60 @@ class FeedbackProcessor:
         """
         text_lower = text.lower()
         
-        # Check for security issues
-        if any(word in text_lower for word in ['security', 'vulnerability', 'exploit', 'attack', 'unsafe']):
-            return FeedbackCategory.SECURITY
+        # Define category keywords with weighted scores
+        category_keywords: Dict[FeedbackCategory, Dict[str, float]] = {
+            FeedbackCategory.SECURITY: {
+                'security': 1.0, 'vulnerability': 1.0, 'exploit': 1.0, 'attack': 0.8, 
+                'unsafe': 0.8, 'injection': 1.0, 'xss': 1.0, 'csrf': 1.0, 'authentication': 0.7,
+                'authorization': 0.7, 'sensitive': 0.6, 'encryption': 0.8, 'password': 0.6,
+                'secret': 0.7, 'permission': 0.6
+            },
+            FeedbackCategory.PERFORMANCE: {
+                'performance': 1.0, 'slow': 0.8, 'efficient': 0.7, 'optimization': 0.9, 
+                'speed': 0.8, 'memory': 0.7, 'cpu': 0.8, 'resource': 0.6, 'latency': 0.9,
+                'throughput': 0.9, 'bottleneck': 0.9, 'cache': 0.7, 'complexity': 0.6
+            },
+            FeedbackCategory.BUG: {
+                'bug': 1.0, 'error': 0.9, 'exception': 0.9, 'crash': 0.9, 'incorrect': 0.8, 
+                'fix': 0.7, 'issue': 0.6, 'problem': 0.6, 'fail': 0.8, 'wrong': 0.8,
+                'unexpected': 0.7, 'edge case': 0.8, 'null': 0.7, 'undefined': 0.7
+            },
+            FeedbackCategory.READABILITY: {
+                'readability': 1.0, 'clarity': 0.9, 'confusing': 0.8, 'naming': 0.8, 
+                'comment': 0.7, 'documentation': 0.8, 'self-explanatory': 0.8, 'understand': 0.7,
+                'readable': 0.9, 'maintainable': 0.7, 'clean': 0.6, 'messy': 0.7
+            },
+            FeedbackCategory.BEST_PRACTICE: {
+                'practice': 0.8, 'convention': 0.9, 'standard': 0.8, 'pattern': 0.7, 
+                'approach': 0.6, 'idiom': 0.8, 'style': 0.7, 'guideline': 0.9, 'principle': 0.8,
+                'consistent': 0.7, 'pep8': 0.9, 'lint': 0.8, 'architecture': 0.7
+            },
+            FeedbackCategory.SUGGESTION: {
+                'suggest': 0.9, 'recommend': 0.9, 'consider': 0.8, 'might': 0.6, 
+                'could': 0.6, 'alternative': 0.8, 'option': 0.7, 'improvement': 0.8,
+                'enhance': 0.8, 'better': 0.7, 'prefer': 0.7
+            }
+        }
         
-        # Check for performance issues
-        if any(word in text_lower for word in ['performance', 'slow', 'efficient', 'optimization', 'speed']):
-            return FeedbackCategory.PERFORMANCE
+        # Calculate scores for each category
+        category_scores: Dict[FeedbackCategory, float] = {category: 0.0 for category in FeedbackCategory}
         
-        # Check for bugs
-        if any(word in text_lower for word in ['bug', 'error', 'exception', 'crash', 'incorrect', 'fix']):
-            return FeedbackCategory.BUG
+        for category, keywords in category_keywords.items():
+            for keyword, weight in keywords.items():
+                if keyword in text_lower:
+                    category_scores[category] += weight
         
-        # Check for readability issues
-        if any(word in text_lower for word in ['readability', 'clarity', 'confusing', 'naming', 'comment']):
-            return FeedbackCategory.READABILITY
+        # Find the category with the highest score
+        max_score = 0.0
+        best_category = FeedbackCategory.GENERAL
         
-        # Check for best practices
-        if any(word in text_lower for word in ['practice', 'convention', 'standard', 'pattern', 'approach']):
-            return FeedbackCategory.BEST_PRACTICE
+        for category, score in category_scores.items():
+            if score > max_score:
+                max_score = score
+                best_category = category
         
-        # Check for suggestions
-        if any(word in text_lower for word in ['suggest', 'recommend', 'consider', 'might', 'could']):
-            return FeedbackCategory.SUGGESTION
-        
-        # Default to general feedback
-        return FeedbackCategory.GENERAL
+        # If no significant match found, return GENERAL
+        return best_category
     
     def _determine_severity(self, text: str) -> str:
         """Determine the severity of the feedback based on the text content.
@@ -149,16 +177,46 @@ class FeedbackProcessor:
         """
         text_lower = text.lower()
         
-        # Check for high severity indicators
-        if any(word in text_lower for word in self._severity_words['high']):
-            return 'high'
+        # Define severity keywords with weights
+        severity_keywords: Dict[str, Dict[str, float]] = {
+            'high': {
+                'critical': 1.0, 'severe': 1.0, 'major': 0.9, 'important': 0.8, 'significant': 0.8,
+                'serious': 0.9, 'dangerous': 1.0, 'urgent': 0.9, 'must': 0.8, 'required': 0.7,
+                'security': 0.9, 'vulnerability': 0.9, 'crash': 0.9, 'error': 0.7, 'bug': 0.7,
+                'broken': 0.8, 'incorrect': 0.7, 'wrong': 0.7, 'fail': 0.8, 'failure': 0.8
+            },
+            'medium': {
+                'moderate': 0.8, 'consider': 0.7, 'should': 0.7, 'recommend': 0.7, 'improvement': 0.6,
+                'enhance': 0.6, 'better': 0.6, 'issue': 0.6, 'problem': 0.6, 'concern': 0.6,
+                'attention': 0.7, 'review': 0.5, 'update': 0.5, 'change': 0.5, 'modify': 0.5,
+                'refactor': 0.6, 'restructure': 0.6, 'reorganize': 0.6
+            },
+            'low': {
+                'minor': 0.8, 'trivial': 0.9, 'style': 0.7, 'nit': 0.9, 'suggestion': 0.7,
+                'cosmetic': 0.8, 'optional': 0.9, 'might': 0.7, 'could': 0.7, 'perhaps': 0.7,
+                'consider': 0.6, 'preference': 0.8, 'opinion': 0.8, 'personal': 0.7, 'taste': 0.8,
+                'readability': 0.6, 'clarity': 0.6, 'documentation': 0.5, 'comment': 0.5
+            }
+        }
         
-        # Check for low severity indicators
-        if any(word in text_lower for word in self._severity_words['low']):
-            return 'low'
+        # Calculate scores for each severity level
+        severity_scores: Dict[str, float] = {'high': 0.0, 'medium': 0.0, 'low': 0.0}
         
-        # Default to medium severity
-        return 'medium'
+        for severity, keywords in severity_keywords.items():
+            for keyword, weight in keywords.items():
+                if keyword in text_lower:
+                    severity_scores[severity] += weight
+        
+        # Find the severity with the highest score
+        max_score = 0.0
+        best_severity = 'medium'  # Default to medium if no clear match
+        
+        for severity, score in severity_scores.items():
+            if score > max_score:
+                max_score = score
+                best_severity = severity
+        
+        return best_severity
     
     def format_feedback(self, feedback_items: List[FeedbackItem], format_type: str = 'text') -> str:
         """Format the feedback items for output.
