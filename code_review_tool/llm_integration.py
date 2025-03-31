@@ -90,13 +90,24 @@ class LLMClient(ABC):
                 prompt_parts.append("```")
         
         # Add instructions for the review
-        prompt_parts.append("\n\nPlease provide a code review that includes:")
+        prompt_parts.append("\n\nPlease provide a code review that includes the following bullet points:")
         prompt_parts.append("1. Overall assessment of the changes")
         prompt_parts.append("2. Specific issues or concerns")
         prompt_parts.append("3. Suggestions for improvement")
         prompt_parts.append("4. Best practices that should be followed")
         prompt_parts.append("5. Any potential bugs or edge cases")
         prompt_parts.append("6. At the end add a short poem related to crocodiles and the code changes")
+        
+        # Add severity classification instructions
+        prompt_parts.append("\nIn addition, for all the above steps, please preface review lines with this naming system to indicate severity so I can parse the output:")
+        prompt_parts.append("Severity Naming System for Code Review:")
+        prompt_parts.append("Please preface each review comment with one of these severity levels and a keyword in brackets, e.g., '[high:critical]' or '[medium:recommend]'. Use the following guidelines to choose the severity and keyword:")
+        prompt_parts.append("- High Severity (urgent issues requiring immediate attention):")
+        prompt_parts.append("  - critical, severe, major, important, significant, serious, dangerous, urgent, must, required, security, vulnerability, crash, error, bug, broken, incorrect, wrong, fail, failure")
+        prompt_parts.append("- Medium Severity (notable issues that should be addressed):")
+        prompt_parts.append("  - moderate, consider, should, recommend, improvement, enhance, better, issue, problem, concern, attention, review, update, change, modify, refactor, restructure, reorganize")
+        prompt_parts.append("- Low Severity (minor or optional suggestions):")
+        prompt_parts.append("  - minor, trivial, style, nit, suggestion, cosmetic, optional, might, could, perhaps, consider, preference, opinion, personal, taste, readability, clarity, documentation, comment")
         
         return "\n".join(prompt_parts)
 
