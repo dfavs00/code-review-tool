@@ -52,6 +52,9 @@ class FeedbackProcessor:
         Returns:
             A list of structured FeedbackItem objects.
         """
+        # Clean up the feedback - fix any unclosed code blocks
+        raw_feedback = self._clean_feedback(raw_feedback)
+        
         # Split the feedback into paragraphs
         paragraphs = [p.strip() for p in raw_feedback.split('\n\n') if p.strip()]
         
@@ -217,6 +220,48 @@ class FeedbackProcessor:
                 best_severity = severity
         
         return best_severity
+    
+    def _clean_feedback(self, raw_feedback: str) -> str:
+        """Clean up the raw feedback text to fix formatting issues.
+        
+        Args:
+            raw_feedback: The raw feedback text from the LLM.
+            
+        Returns:
+            Cleaned feedback text.
+        """
+        # Fix unclosed code blocks - look for poem sections with unclosed backticks
+        lines = raw_feedback.split('\n')
+        
+        # Check for poem section
+        poem_start_idx = -1
+        for i, line in enumerate(lines):
+            if '```' in line and any(poem_word in line.lower() for poem_word in ['poem', 'crocodile']):
+                poem_start_idx = i
+                break
+        
+        # If we found a poem section with backticks, ensure it's properly closed
+        if poem_start_idx >= 0:
+            # Find the next code block marker or end of text
+            has_end_marker = False
+            for i in range(poem_start_idx + 1, len(lines)):
+                if '```' in lines[i]:
+                    has_end_marker = True
+                    break
+            
+            # If no end marker found, add one at the end of the poem
+            if not has_end_marker:
+                # Find where the poem likely ends (empty line after several non-empty lines)
+                poem_end_idx = len(lines)
+                for i in range(poem_start_idx + 1, len(lines)):
+                    if not lines[i].strip() and i > poem_start_idx + 3:  # At least a few lines of poem
+                        poem_end_idx = i
+                        break
+                
+                # Insert closing backticks
+                lines.insert(poem_end_idx, '```')
+        
+        return '\n'.join(lines)
     
     def format_feedback(self, feedback_items: List[FeedbackItem], format_type: str = 'text') -> str:
         """Format the feedback items for output.
